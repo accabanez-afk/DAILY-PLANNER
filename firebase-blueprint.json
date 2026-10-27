@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information including academic details",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID" },
+        "name": { "type": "string", "maxLength": 100, "description": "Student full name" },
+        "email": { "type": "string", "maxLength": 100, "description": "Student email address" },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Non-Binary", "Prefer not to say", "Other"], "description": "Gender identity" },
+        "address": { "type": "string", "maxLength": 250, "description": "Home address" },
+        "grade": { "type": "string", "enum": ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"], "description": "Grade level 7 to 12" },
+        "strand": { "type": "string", "enum": ["N/A", "STEM", "ABM", "HUMSS", "GAS", "TVL-ICT", "TVL-HE", "TVL-IA", "Arts and Design", "Sports", "General Academic"], "description": "Academic strand or N/A" },
+        "createdAt": { "type": "string", "description": "Account creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last profile update timestamp" }
+      },
+      "required": ["uid", "name", "gender", "address", "grade", "strand"]
+    },
+    "TaskItem": {
+      "title": "TaskItem",
+      "description": "Daily planner task with reminder and alarm parameters",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Task document ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "title": { "type": "string", "maxLength": 200, "description": "Title of the task" },
+        "description": { "type": "string", "maxLength": 1000, "description": "Task details/notes" },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Scheduled date (YYYY-MM-DD)" },
+        "time": { "type": "string", "pattern": "^\\d{2}:\\d{2}$", "description": "Scheduled time (HH:MM)" },
+        "category": { "type": "string", "maxLength": 50, "description": "Subject or category (e.g. Math, Science, Homework, Project, Personal)" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"], "description": "Priority level" },
+        "status": { "type": "string", "enum": ["pending", "completed"], "description": "Task completion status" },
+        "hasAlarm": { "type": "boolean", "description": "Whether an alarm/reminder is activated" },
+        "alarmOffsetMinutes": { "type": "number", "description": "Alarm lead time in minutes before scheduled time" },
+        "completedAt": { "type": "string", "description": "Timestamp when finished" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Update timestamp" }
+      },
+      "required": ["userId", "title", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Student profile document secured per user"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "TaskItem",
+      "description": "Daily planner tasks isolated to the authenticated student"
+    }
+  }
+}

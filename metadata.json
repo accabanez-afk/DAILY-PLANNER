@@ -1,0 +1,6 @@
+{
+  "name": "DAILY PLANNER",
+  "description": "A comprehensive daily planner for students with calendar task scheduling, alarm and reminder notifications, profile management, and persistent storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

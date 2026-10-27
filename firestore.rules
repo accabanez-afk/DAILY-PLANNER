@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for User Profile
+    function isValidUserProfile(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && (!('email' in data) || (data.email is string && data.email.size() <= 100))
+        && data.gender is string && data.gender.size() <= 50
+        && data.address is string && data.address.size() <= 250
+        && data.grade is string && data.grade.size() <= 20
+        && data.strand is string && data.strand.size() <= 50
+        && data.uid is string && data.uid == request.auth.uid;
+    }
+
+    // Validation for Task Item
+    function isValidTaskItem(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && (!('description' in data) || (data.description is string && data.description.size() <= 1000))
+        && data.date is string && data.date.size() == 10 && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && (!('time' in data) || (data.time is string && data.time.size() == 5 && data.time.matches('^\\d{2}:\\d{2}$')))
+        && (!('category' in data) || (data.category is string && data.category.size() <= 50))
+        && (!('priority' in data) || (data.priority in ['low', 'medium', 'high']))
+        && data.status in ['pending', 'completed']
+        && (!('hasAlarm' in data) || data.hasAlarm is bool)
+        && (!('alarmOffsetMinutes' in data) || data.alarmOffsetMinutes is number)
+        && data.userId is string && data.userId == request.auth.uid;
+    }
+
+    // User profile document rules
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // PII isolation - users cannot list all users
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isValidId(userId) && isOwner(userId) && isValidUserProfile(incoming());
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      // Tasks subcollection rules
+      match /tasks/{taskId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isValidId(taskId) && isOwner(userId) && isValidTaskItem(incoming());
+        allow update: if isValidId(taskId) && isOwner(userId) && isValidTaskItem(incoming());
+        allow delete: if isValidId(taskId) && isOwner(userId);
+      }
+    }
+
+    // Test connection doc used to verify connection upon app startup
+    match /test/{docId} {
+      allow read: if true;
+    }
+  }
+}
